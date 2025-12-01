@@ -88,4 +88,32 @@ For Apple Silicon (M1/M2/M3):
 
 ```bash
 mv gdc-client /opt/homebrew/bin/
+```
+
+## STAR Gene Expression File Format (TCGA RNA-seq)
+
+Each TCGA STAR quantification file is a tab-separated table containing the
+expression values for one sample. The key columns are:
+
+- **gene_id** – Ensembl gene identifier (e.g., ENSG00000141510)
+- **gene_name** – Human-readable gene symbol (e.g., TP53)
+- **gene_type** – Gene category (protein_coding, lncRNA, etc.)
+
+### Raw Count Columns
+- **unstranded** – Raw Illumina read counts per gene.  
+  This is the primary column used in our analysis.
+- **stranded_first / stranded_second** – Used only for strand-specific libraries
+  (TCGA-BRCA is generally unstranded).
+
+### Normalized Expression Columns
+- **tpm_unstranded** – TPM-normalized expression
+- **fpkm_unstranded** – FPKM-normalized expression
+- **fpkm_uq_unstranded** – Upper-quartile FPKM
+
+### Which Values We Use
+For PCA, UMAP, clustering, and downstream modeling, we use the **`unstranded`**
+raw counts and apply log-transformation or TPM normalization ourselves.  
+These counts originate from Illumina RNA-seq reads aligned and quantified using
+the STAR pipeline.
+
 
