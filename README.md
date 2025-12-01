@@ -49,74 +49,43 @@ tcga-brca-multiomics-subtyping/
     ├─ clustering.py
     └─ visualization.py
 ```
-## Understanding TCGA-BRCA on the GDC Portal
+## Downloading TCGA-BRCA Data
 
-Before working with the data, it is useful to understand how the GDC Portal organizes
-information for a TCGA project, such as **TCGA-BRCA (The Cancer Genome Atlas – Breast Invasive Carcinoma)**.
+The below link contains all the video tutorials for creating cohorts and using the various analyses tools within GDC:  
+https://docs.gdc.cancer.gov/Data_Portal/Users_Guide/Video_Tutorials/
 
-The GDC Project page summarizes the composition of the dataset and reports how many
-patients ("cases") and how many files exist for each type of molecular data. These
-summaries help determine which modalities are widely available and which are sparse,
-allowing informed decisions when constructing a cohort for multi-omics analysis.
+Use the GDC **Cohort Builder** to construct a cohort and download files.
 
-### 1. Cases vs. Files
+### Required Filters
 
-Each TCGA project contains:
-- **Cases** → individual patients.
-- **Files** → data files generated for those patients (RNA-seq files, CNV files, clinical files, etc.).
+**Cohort Builder Filters**
+- **General Filters (Project):** `TCGA-BRCA`
+- **Biospecimen Filters (Tumor Descriptor):** `Primary`
 
-In the project summary, you will see two columns:
 
-- **Cases (n = X)**:  
-  The number of patients that have *at least one* file of that data type.
+**File Level Filters (in Repository)**
+- **Data Category:** `Transcriptome Profiling`
+- **Data Type:** `Gene Expression Quantification`
 
-- **Files (n = Y)**:  
-  The number of individual data files belonging to that category.
+**File Level Filters for Clinical Data (in Repository)**
+- **Data Category:** `Clinical`  
+- **Data Category:** `Biospecimen` (optional but recommended)
 
-### 2. Data Categories
+### Download
+1. Save the cohort.
+2. Go to the **Files** tab for the cohort.
+3. Export a **Manifest**.
+4. Download using the GDC Data Transfer Tool:
+   ```bash
+   gdc-client download -m gdc_manifest.txt -d data/raw/
 
-Data Categories describe *what kind of biological data* is available. Examples include:
-- **Transcriptome Profiling** (RNA-seq)
-- **DNA Methylation**
-- **Copy Number Variation**
-- **Simple Nucleotide Variation** (mutations)
-- **Clinical**
-- **Proteome Profiling**
+### (Optional) Add `gdc-client` to Your Homebrew Path
 
-The "Cases" percentage shows how many patients have that type of data.  
-The "Files" percentage shows how much of the total dataset consists of files from that category.
+To run `gdc-client` from any folder without typing the full path, you may place
+the binary inside a directory managed by Homebrew.
 
-Large coverage (e.g., RNA-seq, methylation, CNV) is ideal for multi-omics projects.
+For Apple Silicon (M1/M2/M3):
 
-### 3. Experimental Strategies
+```bash
+mv gdc-client /opt/homebrew/bin/
 
-Experimental Strategies describe the *laboratory technology* used to generate a data type. Examples:
-- **RNA-Seq** → gene expression
-- **WXS (Whole Exome Sequencing)** → somatic mutations
-- **Methylation Array** → epigenetic methylation
-- **Genotyping Array** → copy number variation
-- **Reverse Phase Protein Array** → proteomics
-- **WGS (Whole Genome Sequencing)**
-- **miRNA-Seq**
-- **ATAC-Seq**
-
-Each strategy lists:
-- **Cases** → number of patients with data generated using that technology  
-- **Files** → total files produced by that technology
-
-### 4. How This Guides Your Analysis
-
-These summaries help guide project design:
-- **RNA-seq** has almost complete coverage → suitable for unsupervised clustering (PCA, UMAP).
-- **DNA Methylation** and **CNV** also have near-complete coverage → good for multi-omics integration.
-- **Proteomics** has ~80% coverage → useful, but not ideal for analyses requiring full cohort overlap.
-
-In practice, most workflows begin with:
-1. **RNA-seq** + **Clinical** data for initial subtyping.
-2. Add **Methylation** and **CNV** once the expression-based framework is established.
-
-### 5. Where to Download Data (Repository vs. Project Page)
-
-While the **Project** page provides summaries, **actual data files are downloaded from the
-"Repository" section** of the GDC Portal. This is where filters (Project, Data Category,
-Data Type, Workflow Type) are applied and files are added to the **Cart** for download.
