@@ -10,13 +10,18 @@ except ImportError:  # pragma: no cover - placeholder project scaffold
     umap = None
 
 
-def run_pca(matrix: pd.DataFrame, n_components: int = 50) -> pd.DataFrame:
-    """Project matrix with PCA and return component scores."""
+def run_pca(
+    matrix: pd.DataFrame, n_components: int = 50, *, return_model: bool = False
+) -> pd.DataFrame | tuple[pd.DataFrame, PCA]:
+    """Project matrix with PCA and return component scores (and optionally the PCA model)."""
 
     pca = PCA(n_components=n_components, random_state=42)
     components = pca.fit_transform(matrix.T)
     cols = [f"PC{i+1}" for i in range(components.shape[1])]
-    return pd.DataFrame(components, index=matrix.columns, columns=cols)
+    scores = pd.DataFrame(components, index=matrix.columns, columns=cols)
+    if return_model:
+        return scores, pca
+    return scores
 
 
 def run_umap(embedding_input: pd.DataFrame, n_neighbors: int = 15, min_dist: float = 0.3) -> pd.DataFrame:

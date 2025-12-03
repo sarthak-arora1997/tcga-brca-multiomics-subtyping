@@ -75,9 +75,10 @@ Use the GDC **Cohort Builder** to construct a cohort and download files.
 1. Save the cohort.
 2. Go to the **Files** tab for the cohort.
 3. Export a **Manifest**.
-4. Download using the GDC Data Transfer Tool:
+4. Download using the GDC Data Transfer Tool and run the below in your terminal:
    ```bash
    gdc-client download -m gdc_manifest.txt -d data/raw/
+   ```
 
 ### (Optional) Add `gdc-client` to Your Homebrew Path
 
