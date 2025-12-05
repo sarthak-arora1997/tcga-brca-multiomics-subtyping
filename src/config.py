@@ -20,6 +20,10 @@ class ProjectConfig:
         return self.data_dir / "raw"
 
     @property
+    def clinical_data_dir(self) -> Path:
+        return self.raw_data_dir / "clinical data"
+
+    @property
     def processed_data_dir(self) -> Path:
         return self.data_dir / "processed"
 
