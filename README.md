@@ -117,4 +117,19 @@ raw counts and apply log-transformation or TPM normalization ourselves.
 These counts originate from Illumina RNA-seq reads aligned and quantified using
 the STAR pipeline.
 
+## Clinical/Biospecimen/SSF XML Files
+
+TCGA distributes rich patient metadata as XML files. XML (eXtensible Markup Language) is a hierarchical text format composed of nested tags (elements) with optional attributes and text content. Each XML document in this project adheres to the NCI TCGA schemas (`https://docs.gdc.cancer.gov/Data_Dictionary/viewer/#?_top=1`). We parse them with Python’s `xml.etree.ElementTree` helpers inside notebook `01_download_and_organize_data.ipynb`, flattening tags into `pandas` tables. The three key XML families are:
+
+- **Clinical (`nationwidechildrens.org_clinical.*.xml`)**:Patient-level records (demographics, diagnosis, receptor status, therapies, follow-up). Each file corresponds to one `bcr_patient_barcode` / `bcr_patient_uuid`. We extract a patient metadata table plus follow-up/drug sub-tables for downstream joins.
+- **Biospecimen (`nationwidechildrens.org_biospecimen.*.xml`)**: Sample-level inventories (sample/portion/aliquot barcodes, UUIDs, analyte metadata). These files bridge expression columns to patients: `bcr_sample_uuid` matches the expression matrix column names, while `bcr_patient_barcode` ties back to the clinical table.
+- **Site-Specific Factors (SSF) (`nationwidechildrens.org_ssf.*.xml`)**: Tumor-sample pathology measurements (procurement method, tumor weight, nuclei percent, QA flags, tumor locations). These complement the biospecimen data with additional quality metrics per sample.
+
+Each XML document contains nested sections (e.g., `<patient>`, `<samples>`, `<tumor_samples>`). In the notebook we:
+
+1. Build manifests (DataFrames) of all XML files under `data/raw/clinical data/`.
+2. Parse a sample file from each category via `xml.etree.ElementTree`, recursively flattening tags into dictionaries.
+3. Display the resulting `pandas` tables (patient, samples, follow-ups, SSF tumor samples, etc.) to understand fields before designing loaders.
+
+When you need to integrate XML data, re-use the notebook parsing logic (or promote it into `src/data_loading.py`) so that downstream analyses can join expression matrices on the appropriate identifiers (`bcr_sample_uuid` ↔ columns, `bcr_patient_barcode` ↔ patient clinical metadata).
 
