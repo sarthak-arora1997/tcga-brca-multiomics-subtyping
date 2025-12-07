@@ -47,7 +47,7 @@ tcga-brca-multiomics-subtyping/
     ├─ preprocessing.py
     ├─ dimensionality_reduction.py
     ├─ clustering.py
-    └─ visualization.py
+    └─ plotting.py
 ```
 ## Downloading TCGA-BRCA Data
 
@@ -132,4 +132,3 @@ Each XML document contains nested sections (e.g., `<patient>`, `<samples>`, `<tu
 3. Display the resulting `pandas` tables (patient, samples, follow-ups, SSF tumor samples, etc.) to understand fields before designing loaders.
 
 When you need to integrate XML data, re-use the notebook parsing logic (or promote it into `src/data_loading.py`) so that downstream analyses can join expression matrices on the appropriate identifiers (`bcr_sample_uuid` ↔ columns, `bcr_patient_barcode` ↔ patient clinical metadata).
-

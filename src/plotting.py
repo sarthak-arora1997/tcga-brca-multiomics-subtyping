@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+sns.set_context("talk")
+
 
 def scatter_embedding(
     data: pd.DataFrame,
@@ -36,3 +38,4 @@ def scatter_embedding(
     ax.set_xlabel(xlabel or x)
     ax.set_ylabel(ylabel or y)
     return ax
+
