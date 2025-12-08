@@ -3,11 +3,19 @@ Unsupervised subtyping of TCGA-BRCA patients using RNA-seq expression (and later
 
 ## Environment Setup (Homebrew Python + venv)
 
-1. Create a virtual environment:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+- Install dependencies on macOS (assumes Homebrew Python):
+  ```bash
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install --upgrade pip
+  pip install -r requirements.txt
+  ```
+- If you manage environments with `pyenv`, adjust the `python3` command accordingly (`pyenv local 3.11.x` before creating the venv).
+- For Linux environments, the same commands apply; just make sure a suitable Python build is available (`apt install python3-venv` if needed).
+- When working in notebooks, remember to install the IPython kernel inside the venv if you want to select it explicitly:
+  ```bash
+  python -m ipykernel install --user --name tcga-brca --display-name "tcga-brca (venv)"
+  ```
 
 The main goals are:
 
@@ -117,18 +125,27 @@ raw counts and apply log-transformation or TPM normalization ourselves.
 These counts originate from Illumina RNA-seq reads aligned and quantified using
 the STAR pipeline.
 
-## Clinical/Biospecimen/SSF XML Files
+## Clinical/Biospecimen XML Files
 
-TCGA distributes rich patient metadata as XML files. XML (eXtensible Markup Language) is a hierarchical text format composed of nested tags (elements) with optional attributes and text content. Each XML document in this project adheres to the NCI TCGA schemas (`https://docs.gdc.cancer.gov/Data_Dictionary/viewer/#?_top=1`). We parse them with Python’s `xml.etree.ElementTree` helpers inside notebook `01_download_and_organize_data.ipynb`, flattening tags into `pandas` tables. The three key XML families are:
+TCGA distributes rich patient metadata as XML files. XML (eXtensible Markup Language) is a hierarchical text format composed of nested tags (elements) with optional attributes and text content. Each XML document in this project adheres to the NCI TCGA schemas (`https://docs.gdc.cancer.gov/Data_Dictionary/viewer/#?_top=1`). We parse them with Python’s `xml.etree.ElementTree` helpers inside notebook `01_download_and_organize_data.ipynb`, flattening tags into `pandas` tables. The two key XML families we currently surface are:
 
-- **Clinical (`nationwidechildrens.org_clinical.*.xml`)**:Patient-level records (demographics, diagnosis, receptor status, therapies, follow-up). Each file corresponds to one `bcr_patient_barcode` / `bcr_patient_uuid`. We extract a patient metadata table plus follow-up/drug sub-tables for downstream joins.
+- **Clinical (`nationwidechildrens.org_clinical.*.xml`)**: Patient-level records (demographics, diagnosis, receptor status, therapies, follow-up). Each file corresponds to one `bcr_patient_barcode` / `bcr_patient_uuid`. We extract a patient metadata table plus follow-up/drug sub-tables for downstream joins.
 - **Biospecimen (`nationwidechildrens.org_biospecimen.*.xml`)**: Sample-level inventories (sample/portion/aliquot barcodes, UUIDs, analyte metadata). These files bridge expression columns to patients: `bcr_sample_uuid` matches the expression matrix column names, while `bcr_patient_barcode` ties back to the clinical table.
-- **Site-Specific Factors (SSF) (`nationwidechildrens.org_ssf.*.xml`)**: Tumor-sample pathology measurements (procurement method, tumor weight, nuclei percent, QA flags, tumor locations). These complement the biospecimen data with additional quality metrics per sample.
 
-Each XML document contains nested sections (e.g., `<patient>`, `<samples>`, `<tumor_samples>`). In the notebook we:
+Each XML document contains nested sections (e.g., `<patient>`, `<samples>`, `<portions>`). In the notebook we:
 
 1. Build manifests (DataFrames) of all XML files under `data/raw/clinical data/`.
 2. Parse a sample file from each category via `xml.etree.ElementTree`, recursively flattening tags into dictionaries.
-3. Display the resulting `pandas` tables (patient, samples, follow-ups, SSF tumor samples, etc.) to understand fields before designing loaders.
+3. Display the resulting `pandas` tables (patient-level data, nested biospecimen entries, etc.) to understand fields before designing loaders.
 
 When you need to integrate XML data, re-use the notebook parsing logic (or promote it into `src/data_loading.py`) so that downstream analyses can join expression matrices on the appropriate identifiers (`bcr_sample_uuid` ↔ columns, `bcr_patient_barcode` ↔ patient clinical metadata).
+
+## Linking Biospecimen JSON to STAR Metadata
+
+The GDC cart download also includes JSON manifests (e.g., `metadata.cart.*.json` for STAR counts, `biospecimen.cart.*.json` for biospecimen files). In `01_download_and_organize_data.ipynb` we:
+
+1. Normalize the STAR metadata JSON to a DataFrame (`metadata_df`) and attach the nested `associated_entities` / `analysis.input_files` columns to the expression manifest (`expression_index`) using helper utilities from `src/notebook_utils.py`.
+2. Load the biospecimen cart JSON (`biospecimen_metadata_df`) and traverse every case → sample → portion → analyte → aliquot entry to build an aliquot-level manifest.
+3. Join the resulting aliquot rows to the expression manifest on the aliquot submitter ID (`TCGA-…-…`) so that each STAR count file is enriched with the biospecimen context (sample type, analyte metadata, aliquot quantities, etc.).
+
+This linkage allows you to move seamlessly from a column in the expression matrix to its aliquot barcode/UUID, and then to the patient-level clinical table for downstream analyses.

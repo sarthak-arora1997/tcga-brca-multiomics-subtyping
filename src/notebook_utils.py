@@ -77,3 +77,13 @@ def summarize_missing(df: pd.DataFrame) -> pd.DataFrame:
     missing_summary = df.isna().mean().mul(100).reset_index()
     missing_summary.columns = ["column_name", "missing_percentage"]
     return missing_summary.sort_values(by="missing_percentage", ascending=False, kind="mergesort").reset_index(drop=True)
+
+
+def drop_missing_columns(df: pd.DataFrame, threshold: float = 50.0) -> pd.DataFrame:
+    """Return a copy of ``df`` with columns removed when missing percentage exceeds ``threshold``."""
+
+    missing_summary = summarize_missing(df)
+    to_drop = missing_summary.loc[missing_summary["missing_percentage"] > threshold, "column_name"]
+    if to_drop.empty:
+        return df.copy()
+    return df.drop(columns=to_drop.tolist())
