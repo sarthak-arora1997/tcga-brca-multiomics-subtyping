@@ -43,6 +43,14 @@ def load_expression_tpm(path: Optional[Path] = None, *, config: ProjectConfig = 
     return pd.read_csv(file_path, compression="gzip", **_TSV_KWARGS)
 
 
+def load_expression_manifest(path: Optional[Path] = None, *, config: ProjectConfig = _DEFAULT_CONFIG) -> pd.DataFrame:
+    """Load the enriched expression-file manifest (biospecimen metadata)."""
+
+    default = config.processed_data_dir / "expression_file_index.tsv"
+    file_path = _resolve_path(path, default)
+    return pd.read_csv(file_path, sep="\t")
+
+
 def load_pca_scores(path: Optional[Path] = None, *, config: ProjectConfig = _DEFAULT_CONFIG) -> pd.DataFrame:
     """Load the PCA scores generated in notebook 02."""
 
